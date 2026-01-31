@@ -1,0 +1,16 @@
+[project]
+name = "aegis-test-agent"
+version = "0.1.0"
+description = "Aegis Test Agent Project"
+authors = [
+    {name = "Pedro Visconti Guidotte",email = "peguidotte@email.com"}
+]
+requires-python = "^3.13"
+dependencies = [
+    "google-cloud-pubsub (>=2.34.0,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
