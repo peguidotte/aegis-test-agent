@@ -1,0 +1,13 @@
+services:
+  pubsub-emulator:
+    image: google/cloud-sdk:emulators
+    ports:
+      - "8085:8085"
+    environment:
+      PUBSUB_PROJECT_ID: local-project
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
