@@ -1,17 +1,18 @@
-"""Google Cloud Pub/Sub messaging backend implementation."""
+"""Google Cloud Pub/Sub messaging implementation."""
 
 import json
 import logging
 import os
+import asyncio
 from collections.abc import Awaitable, Callable
 from typing import Any
 
 from google.cloud import pubsub_v1
 from google.cloud.pubsub_v1.subscriber.message import Message
 
-from ..config import MessagingSettings
-from ..interfaces import MessagePublisher, MessageSubscriber
-from ..topics import MessagingDestination
+from .config import MessagingSettings
+from .interfaces import MessagePublisher, MessageSubscriber
+from .topics import MessagingDestination
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class PubSubPublisher(MessagePublisher):
 
     def _get_topic_path(self, destination: MessagingDestination) -> str:
         """Build full topic path."""
-        return f"projects/{self._settings.pubsub_project_id}/topics/{destination.pubsub.topic}"
+        return f"projects/{self._settings.pubsub_project_id}/topics/{destination.topic}"
 
     async def publish(
         self,
@@ -79,7 +80,7 @@ class PubSubPublisher(MessagePublisher):
         logger.debug(
             "Published message to Pub/Sub",
             extra={
-                "topic": destination.pubsub.topic,
+                "topic": destination.topic,
                 "message_id": message_id,
                 "correlation_id": correlation_id,
             },
@@ -129,7 +130,7 @@ class PubSubSubscriber(MessageSubscriber):
         """Build full subscription path."""
         return (
             f"projects/{self._settings.pubsub_project_id}"
-            f"/subscriptions/{destination.pubsub.subscription}"
+            f"/subscriptions/{destination.subscription}"
         )
 
     async def subscribe(
@@ -141,7 +142,7 @@ class PubSubSubscriber(MessageSubscriber):
         self._subscriptions.append((destination, handler))
         logger.info(
             "Registered Pub/Sub subscription",
-            extra={"subscription": destination.pubsub.subscription},
+            extra={"subscription": destination.subscription},
         )
 
     async def start_consuming(self) -> None:
@@ -158,8 +159,14 @@ class PubSubSubscriber(MessageSubscriber):
 
             logger.info(
                 "Started consuming from Pub/Sub subscription",
-                extra={"subscription": destination.pubsub.subscription},
+                extra={"subscription": destination.subscription},
             )
+
+        # Keep consuming until interrupted
+        try:
+            await asyncio.Future()  # Run forever until cancelled
+        except asyncio.CancelledError:
+            logger.info("Consuming cancelled, shutting down...")
 
     async def stop_consuming(self) -> None:
         """Stop consuming messages."""
@@ -177,23 +184,42 @@ class PubSubSubscriber(MessageSubscriber):
         handler: Callable[[dict[str, Any], str | None], Awaitable[None]],
     ) -> Callable[[Message], None]:
         """Create a message processor wrapper for the handler."""
-        import asyncio
-
         def process_message(message: Message) -> None:
-            try:
-                body = json.loads(message.data.decode("utf-8"))
-                correlation_id = message.attributes.get("correlation_id")
+            correlation_id = message.attributes.get("correlation_id")
+            raw_data = message.data.decode("utf-8") if message.data else ""
 
-                # Run async handler in event loop
-                loop = asyncio.get_event_loop()
-                loop.run_until_complete(handler(body, correlation_id))
+            logger.info(
+                f"Received Pub/Sub message | message_id={message.message_id} | "
+                f"correlation_id={correlation_id} | data={raw_data[:200] if raw_data else '(empty)'}"
+            )
+
+            try:
+                if not raw_data:
+                    logger.warning(
+                        "Received empty message, acknowledging to remove from queue",
+                        extra={"message_id": message.message_id, "correlation_id": correlation_id},
+                    )
+                    message.ack()
+                    return
+
+                body = json.loads(raw_data)
+
+                logger.info(
+                    f"Message parsed successfully {body}"
+                )
 
                 message.ack()
-            except Exception:
-                logger.exception(
-                    "Error processing message",
-                    extra={"message_id": message.message_id},
+
+            except json.JSONDecodeError as e:
+                logger.error(
+                    "Invalid JSON in message, acknowledging to remove from queue",
+                    extra={
+                        "message_id": message.message_id,
+                        "correlation_id": correlation_id,
+                        "raw_data_preview": raw_data[:100],
+                        "error": str(e),
+                    },
                 )
-                message.nack()
+                message.ack()  # Ack invalid messages to prevent infinite redelivery
 
         return process_message

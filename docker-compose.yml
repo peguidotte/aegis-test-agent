@@ -1,13 +1,18 @@
 services:
   pubsub-emulator:
-    image: google/cloud-sdk:emulators
+    image: 'gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators'
+    container_name: aegis-pubsub-agent
+    profiles:
+      - pubsub
+    command: >
+      gcloud beta emulators pubsub start
+      --project=${AEGIS_PUBSUB_PROJECT_ID:-aegis-local}
+      --host-port=0.0.0.0:8085
     ports:
-      - "8085:8085"
-    environment:
-      PUBSUB_PROJECT_ID: local-project
-    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
+      - '8085:8085'    
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8085"]
-      interval: 5s
+      test: ["CMD-SHELL", "curl -f http://localhost:8085 || exit 1"]
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s

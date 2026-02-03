@@ -5,7 +5,7 @@ This module demonstrates how to start the agents with Pub/Sub messaging.
 
 import asyncio
 import logging
-from aegis_agents.shared.messaging import MessagingFactory, Topics
+from aegis_agents.shared.messaging import PubSubSubscriber, MessagingSettings, Topics
 
 # Configure logging
 logging.basicConfig(
@@ -36,8 +36,9 @@ async def main() -> None:
     """Start the Aegis Test Agents."""
     logger.info("Starting Aegis Test Agents")
 
-    # Create subscriber (backend determined by AEGIS_MESSAGING_BACKEND env var)
-    subscriber = MessagingFactory.create_subscriber()
+    # Create subscriber with environment configuration
+    settings = MessagingSettings()
+    subscriber = PubSubSubscriber(settings)
 
     try:
         # Connect to messaging backend

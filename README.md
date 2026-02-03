@@ -103,24 +103,6 @@ poetry run python main.py
 
 ---
 
-## Switching Backends
-
-### RabbitMQ
-
-```env
-AEGIS_MESSAGING_BACKEND=rabbitmq
-AEGIS_MESSAGING_RABBITMQ_HOST=localhost
-AEGIS_MESSAGING_RABBITMQ_PORT=5672
-AEGIS_MESSAGING_RABBITMQ_USER=guest
-AEGIS_MESSAGING_RABBITMQ_PASSWORD=guest
-```
-
-Then run:
-
-```bash
-poetry run python main.py
-```
-
 ---
 
 ## Architecture
@@ -131,11 +113,9 @@ src/aegis_agents/
 │   └── messaging/
 │       ├── topics.py          # Centralized topic definitions
 │       ├── config.py          # Configuration from env vars
-│       ├── factory.py         # Factory to create pub/sub clients
 │       ├── interfaces.py      # Abstract interfaces
-│       └── backends/
-│           ├── rabbitmq.py    # RabbitMQ implementation
-│           └── pubsub.py      # Google Cloud Pub/Sub implementation
+│       ├── pubsub.py          # Google Cloud Pub/Sub implementation
+│       └── __init__.py
 │
 ├── test_planner/              # Test planner agent
 ├── test_generator/            # Test generator agent
@@ -153,15 +133,8 @@ Edit [src/aegis_agents/shared/messaging/topics.py](src/aegis_agents/shared/messa
 class Topics:
     MY_NEW_TOPIC = MessagingDestination(
         name="my-new-topic",
-        rabbitmq=RabbitMQDestination(
-            queue="aegis-test.my-topic.started",
-            exchange="aegis-test.my-topic.exchange",
-            routing_key="my.topic.started",
-        ),
-        pubsub=PubSubDestination(
-            topic="aegis-test.my-topic.started",
-            subscription="my-agent.aegis-test.my-topic.started",
-        ),
+        topic="aegis-test.my-topic.started",
+        subscription="my-agent.aegis-test.my-topic.started",
     )
 ```
 
@@ -170,9 +143,10 @@ class Topics:
 ## Publishing Messages
 
 ```python
-from aegis_agents.shared.messaging import MessagingFactory, Topics
+from aegis_agents.shared.messaging import PubSubPublisher, MessagingSettings, Topics
 
-publisher = MessagingFactory.create_publisher()
+settings = MessagingSettings()
+publisher = PubSubPublisher(settings)
 await publisher.connect()
 
 await publisher.publish(
@@ -189,12 +163,13 @@ await publisher.disconnect()
 ## Subscribing to Topics
 
 ```python
-from aegis_agents.shared.messaging import MessagingFactory, Topics
+from aegis_agents.shared.messaging import PubSubSubscriber, MessagingSettings, Topics
 
 async def my_handler(message: dict, correlation_id: str | None):
     print(f"Received: {message}")
 
-subscriber = MessagingFactory.create_subscriber()
+settings = MessagingSettings()
+subscriber = PubSubSubscriber(settings)
 await subscriber.connect()
 await subscriber.subscribe(Topics.TEST_GENERATION_STARTED, my_handler)
 await subscriber.start_consuming()

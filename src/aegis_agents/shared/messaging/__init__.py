@@ -1,15 +1,15 @@
-"""Messaging abstractions and Pub/Sub adapters.
+"""Messaging abstractions and Pub/Sub implementation.
 
 Usage:
     from aegis_agents.shared.messaging import (
-        MessagingFactory,
+        PubSubPublisher,
+        PubSubSubscriber,
         Topics,
-        MessagingBackend,
     )
 
-    # Create publisher/subscriber (backend determined by AEGIS_MESSAGING_BACKEND env var)
-    publisher = MessagingFactory.create_publisher()
-    subscriber = MessagingFactory.create_subscriber()
+    # Create publisher/subscriber
+    publisher = PubSubPublisher(MessagingSettings())
+    subscriber = PubSubSubscriber(MessagingSettings())
 
     # Publish to a topic
     await publisher.connect()
@@ -22,20 +22,17 @@ Usage:
 """
 
 from .config import MessagingSettings, get_messaging_settings
-from .factory import MessagingFactory
 from .interfaces import MessagePublisher, MessageSubscriber
-from .topics import MessagingDestination, PubSubDestination, RabbitMQDestination, Topics
-from .types import MessagingBackend
+from .pubsub import PubSubPublisher, PubSubSubscriber
+from .topics import MessagingDestination, Topics
 
 __all__ = [
-    "MessagingBackend",
     "MessagingDestination",
-    "MessagingFactory",
     "MessagingSettings",
     "MessagePublisher",
     "MessageSubscriber",
-    "PubSubDestination",
-    "RabbitMQDestination",
+    "PubSubPublisher",
+    "PubSubSubscriber",
     "Topics",
     "get_messaging_settings",
 ]
