@@ -28,7 +28,7 @@ class Topics:
     Usage:
         from aegis_agents.shared.messaging.topics import Topics
 
-        destination = Topics.TEST_GENERATION_STARTED
+        destination = Topics.TEST_GENERATION_REQUESTED
         # Access topic: destination.topic
         # Access subscription: destination.subscription
     """
@@ -37,27 +37,35 @@ class Topics:
     # TEST GENERATION
     # ==========================================================================
 
-    TEST_GENERATION_STARTED = MessagingDestination(
-        name="test-generation-started",
-        topic="aegis-test.test-generation.started",
-        subscription="test-planner.aegis-test.test-generation.started",
+    TEST_GENERATION_REQUESTED = MessagingDestination(
+        name="test-generation-requested",
+        topic="aegis-test.test-generation.requested",
+        subscription="test-planner.aegis-test.test-generation.requested",
     )
 
     # ==========================================================================
     # TEST PLANNING
     # ==========================================================================
 
-    TEST_PLANNING_COMPLETED = MessagingDestination(
-        name="test-planning-completed",
-        topic="aegis-test.test-planning.completed",
-        subscription="orchestrator.aegis-test.test-planning.completed",
+    TEST_GENERATION_PLANNING_STARTED = MessagingDestination(
+        name="test-generation-planning-started",
+        topic="aegis-test.test-generation.planning.started",
+        subscription="orchestrator.aegis-test.test-generation.planning.started",
+    )
+    
+    TEST_GENERATION_PLANNED = MessagingDestination(
+        name="test-generation-planning-completed",
+        topic="aegis-test.test-generation.planning.completed",
+        subscription="orchestrator.aegis-test.test-generation.planning.completed",
     )
 
-    TEST_PLANNING_FAILED = MessagingDestination(
-        name="test-planning-failed",
-        topic="aegis-test.test-planning.failed",
-        subscription="orchestrator.aegis-test.test-planning.failed",
+
+    TEST_GENERATION_PLANNING_FAILED = MessagingDestination(
+        name="test-generation-planning-failed",
+        topic="aegis-test.test-generation.planning.failed",
+        subscription="orchestrator.aegis-test.test-generation.planning.failed",
     )
+
 
     # ==========================================================================
     # Add more topics below as needed

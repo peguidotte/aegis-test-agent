@@ -8,7 +8,6 @@ from .topics import MessagingDestination
 
 
 class MessagePublisher(ABC):
-    """Abstract publisher interface."""
 
     @abstractmethod
     async def connect(self) -> None:

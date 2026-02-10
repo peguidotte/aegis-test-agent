@@ -15,20 +15,21 @@ echo Waiting for emulator to be ready...
 timeout /t 10 /nobreak
 
 echo Creating topics (idempotent)...
-call :ensure_topic aegis-test.test-generation.started
-call :ensure_topic aegis-test.test-planning.completed
-call :ensure_topic aegis-test.test-planning.failed
+call :ensure_topic aegis-test.test-generation.requested
+call :ensure_topic aegis-test.test-generation.planning.started
+call :ensure_topic aegis-test.test-generation.planning.completed
+call :ensure_topic aegis-test.test-generation.planning.failed
 
 echo Creating subscriptions (idempotent)...
-call :ensure_subscription test-planner.aegis-test.test-generation.started aegis-test.test-generation.started
-call :ensure_subscription orchestrator.aegis-test.test-planning.completed aegis-test.test-planning.completed
-call :ensure_subscription orchestrator.aegis-test.test-planning.failed aegis-test.test-planning.failed
+call :ensure_subscription test-planner.aegis-test.test-generation.requested aegis-test.test-generation.requested
+call :ensure_subscription orchestrator.aegis-test.test-generation.planning.started aegis-test.test-generation.planning.started
+call :ensure_subscription orchestrator.aegis-test.test-generation.planning.completed aegis-test.test-generation.planning.completed
+call :ensure_subscription orchestrator.aegis-test.test-generation.planning.failed aegis-test.test-generation.planning.failed
 
 echo.
 echo (✓) Pub/Sub Emulator is ready!
 echo.
 echo Your .env should have:
-echo   AEGIS_MESSAGING_BACKEND=pubsub
 echo   AEGIS_MESSAGING_PUBSUB_PROJECT_ID=%PROJECT_ID%
 echo   AEGIS_MESSAGING_PUBSUB_EMULATOR_HOST=localhost:8085
 echo.

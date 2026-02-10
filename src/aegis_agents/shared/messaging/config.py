@@ -2,11 +2,7 @@
 
 import importlib
 from typing import Any
-
 from pydantic import Field
-
-from .types import MessagingBackend
-
 
 _pydantic_settings: Any = importlib.import_module("pydantic_settings")
 BaseSettings = _pydantic_settings.BaseSettings
@@ -21,12 +17,6 @@ class MessagingSettings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
-    )
-
-    # Backend selection
-    backend: MessagingBackend = Field(
-        default=MessagingBackend.PUBSUB,
-        description="Messaging backend to use",
     )
 
     # Google Cloud Pub/Sub settings

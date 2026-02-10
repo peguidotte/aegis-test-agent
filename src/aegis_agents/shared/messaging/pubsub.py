@@ -21,16 +21,10 @@ class PubSubPublisher(MessagePublisher):
     """Google Cloud Pub/Sub publisher implementation."""
 
     def __init__(self, settings: MessagingSettings) -> None:
-        """Initialize Pub/Sub publisher.
-
-        Args:
-            settings: Messaging configuration settings.
-        """
         self._settings = settings
         self._publisher: pubsub_v1.PublisherClient | None = None
 
     async def connect(self) -> None:
-        """Initialize Pub/Sub publisher client."""
         self._configure_emulator()
         self._publisher = pubsub_v1.PublisherClient()
         logger.info(
@@ -39,7 +33,6 @@ class PubSubPublisher(MessagePublisher):
         )
 
     async def disconnect(self) -> None:
-        """Close Pub/Sub publisher client."""
         if self._publisher:
             self._publisher.transport.close()
         logger.info("Disconnected from Google Cloud Pub/Sub")
@@ -54,7 +47,6 @@ class PubSubPublisher(MessagePublisher):
             )
 
     def _get_topic_path(self, destination: MessagingDestination) -> str:
-        """Build full topic path."""
         return f"projects/{self._settings.pubsub_project_id}/topics/{destination.topic}"
 
     async def publish(
@@ -63,7 +55,6 @@ class PubSubPublisher(MessagePublisher):
         message: dict[str, Any],
         correlation_id: str | None = None,
     ) -> None:
-        """Publish message to Pub/Sub topic."""
         if not self._publisher:
             raise RuntimeError("Publisher not connected")
 

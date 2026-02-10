@@ -44,9 +44,9 @@ async def main() -> None:
         # Connect to messaging backend
         await subscriber.connect()
 
-        # Subscribe to test generation started topic
+        # Subscribe to test generation requested topic
         await subscriber.subscribe(
-            Topics.TEST_GENERATION_STARTED,
+            Topics.TEST_GENERATION_REQUESTED,
             handle_test_generation_request,
         )
 
